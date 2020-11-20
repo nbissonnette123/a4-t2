@@ -1,0 +1,103 @@
+---
+title: "Assignment 4 Task 2"
+author: "Nicholas Bissonnette"
+date: "11/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(broom)
+library(lubridate)
+library(here)
+library(beeswarm)
+library(ggbeeswarm)
+```
+
+Introduction: A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last.
+
+Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 (Accessed 2020-11-17).
+
+
+Data and analyses: A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used
+
+
+C. i 
+Below you will see that 
+
+```{r}
+hares <- read_csv(here("data","bonanza_hares.csv"))
+
+
+hares_year <- hares %>% 
+  mutate(Date = mdy(date)) %>% 
+  mutate(year = year(Date))
+
+hares_j <- hares_year %>% 
+  filter(age =="j") %>% 
+  group_by(year)
+
+
+ggplot(data=hares_j, aes(x=year))+
+  geom_histogram ( aes(fill= "red", na.rm = TRUE))+
+  labs(title= "Annual juvenile hare trap counts by site ", x= "Year" , y= "# of trapped juvenile hares" ,
+       subtitle = "Figure 1.1")+
+  theme_minimal()+
+  theme(axis.text.x= element_text(angle= 90, hjust=1))+
+  theme(legend.position = "none")
+
+hares_j_count <- hares_year %>% 
+  filter(age =="j") %>% 
+  count(age, year)
+
+hares_sum <- hares_j_count %>% 
+  summarise(mean_trap = mean( n),
+            median_trap= median(n))
+
+
+```
+
+
+
+
+### **Figure 1.1**  shows the counts of each trapped juvenile  hare at the  three trapping sites ( bonbos, bonmat, bonrip) by year.
+
+I will get the mean or mdian annual # of juvenile gares trapped 
+
+
+The data tells us that a total of 378 hares were trapped from 1999 -2012. The year with the lowest amount traps was 2010 with 2 and the year with the most traps was 1999 with 126.This data appears to not be normally distributed, with the majority of traps coming in the early years of the study. The mean annual count of traps is 31.5, which is not close to a value that is seen in any individual year.The median value of the annual traps is 18.5. This large difference between median and mode is evidence for none normal distribution.     
+
+ii) 
+Now I will create a data visualization to compare juvenile hare weights by sex and site. I will do this making a dataframe of sex, age, weight and grid. Then I will plot that data in a facet version to show each.   
+
+```{r}
+hare_sex <- hares %>% 
+  select(age, grid, weight, sex) %>% 
+  filter(age == "j")
+
+ggplot() +
+  geom_beeswarm(data=hare_sex, 
+                aes (x=sex, y=weight),
+                color= "blue",
+                size=1,
+                corral=c("wrap")
+                )+
+  facet_wrap(~grid)+
+  labs(title = "Snowshoe hare weight and sex compaison by trap site", y= "weight in grams", x= "Hare Sex")
+   
+
+```
+Here I will make a summary statistic table for the hares of the weights. 
+
+```{r}
+weight_sum <-hare_sex %>% 
+  group_by(sex, grid) %>% 
+  summarize(
+    mean_weight= mean(weight),
+    sd_weight =sd(weight),
+    sample_size= n(),
+    se_weight = sd(weight)/sqrt(n()),
+    var_weight = var(weight))
+```
+
